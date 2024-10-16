@@ -2,7 +2,7 @@ import 'dart:io';
 import 'package:E_HandyHelp/User/BookPage.dart';
 import 'package:E_HandyHelp/User/UserNotification.dart';
 import 'package:flutter/material.dart';
-import 'package:carousel_slider/carousel_slider.dart';
+
 import 'package:E_HandyHelp/FirstPage.dart';
 import 'package:E_HandyHelp/User/Messages.dart';
 import 'package:E_HandyHelp/User/Settings.dart';
@@ -12,6 +12,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:image_picker/image_picker.dart';
 import 'dart:convert'; 
 import 'package:http/http.dart' as http; 
+import 'package:fluttertoast/fluttertoast.dart';
 
 class UserHomePage extends StatelessWidget {
   const UserHomePage({super.key});
@@ -81,7 +82,7 @@ class _DashboardState extends State<Dashboard> {
   // Fetch profiles from the API
   Future<void> fetchProfiles() async {
     try {
-      final response = await http.get(Uri.parse('http://127.0.0.1:3000/profiles'));
+      final response = await http.get(Uri.parse('https://8d15a120-59ff-4395-9b44-876920f1d072-00-9xsue14fhvuy.worf.replit.dev/profiles'));
       if (response.statusCode == 200) {
         List<dynamic> data = jsonDecode(response.body);
         setState(() {
@@ -265,14 +266,35 @@ class _DashboardState extends State<Dashboard> {
                       );
                     },
                   ),
-                  
                   ListTile(
                     leading: Icon(
-                      Icons.contact_support_rounded,
+                      Icons.pending,
                       color: const Color.fromARGB(255, 7, 49, 112),
                     ),
-                    title: Text('Contact Admin'),
-                    onTap: () {},
+                    title: Text('Pending Bookings'),
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => BookingListScreen(status: 'accepted',userId :_id),
+                        ),
+                      );
+                    },
+                  ),
+                  ListTile(
+                    leading: Icon(
+                      Icons.check_circle,
+                      color: const Color.fromARGB(255, 7, 49, 112),
+                    ),
+                    title: Text('Completed Bookings'),
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => BookingListScreen(status: 'completed',userId:_id),
+                        ),
+                      );
+                    },
                   ),
                   ListTile(
                     leading: Icon(
@@ -322,30 +344,7 @@ class _DashboardState extends State<Dashboard> {
                           ),
                         ),
                       ),
-                      CarouselSlider(
-                        options: CarouselOptions(
-                          height: 250,
-                          autoPlay: true,
-                          enlargeCenterPage: true,
-                        ),
-                        items: [
-                          // Add carousel items here
-                          'https://via.placeholder.com/400x200?text=Slide+1',
-                          'https://via.placeholder.com/400x200?text=Slide+2',
-                          'https://via.placeholder.com/400x200?text=Slide+3',
-                        ].map((item) {
-                          return Container(
-                            margin: EdgeInsets.symmetric(horizontal: 5.0),
-                            decoration: BoxDecoration(
-                              image: DecorationImage(
-                                image: NetworkImage(item),
-                                fit: BoxFit.cover,
-                              ),
-                              borderRadius: BorderRadius.circular(8.0),
-                            ),
-                          );
-                        }).toList(),
-                      ),
+                      
                       SizedBox(height: 20),
                       Padding(
                         padding: EdgeInsets.symmetric(horizontal: 16.0),
@@ -395,4 +394,331 @@ class _DashboardState extends State<Dashboard> {
     );
   }
   
+}
+
+class Booking {
+  final String id;
+  final String serviceDetails;
+  final String status;
+  final String dateOfService; // New field
+  final List<String> images; // New field for array of base64 strings
+  final String userId; // New field for user ID
+  final String bookerFirstName; // New field for Booker's First Name
+  final String bookerLastName; // New field for Booker's Last Name
+
+  Booking({
+    required this.id,
+    required this.serviceDetails,
+    required this.status,
+    required this.dateOfService,
+    required this.images,
+    required this.userId,
+    required this.bookerFirstName,
+    required this.bookerLastName,
+  });
+
+  // Factory method to create a Booking object from JSON
+  factory Booking.fromJson(Map<String, dynamic> json) {
+    return Booking(
+      id: json['_id'] ?? "no id",
+      serviceDetails: json['serviceDetails'] ?? "No details",
+      status: json['status'] ?? "no status",
+      dateOfService: json['dateOfService'] ?? "No date provided",
+      images: List<String>.from(json['images'] ?? []), // Parse the array of images
+      userId: json['userId'] ?? "no user ID",
+      bookerFirstName: json['bookerFirstName'] ?? "Unknown",
+      bookerLastName: json['bookerLastName'] ?? "Unknown",
+    );
+  }
+}
+class BookingListScreen extends StatefulWidget {
+  final String status;
+  final String userId;
+
+  BookingListScreen({required this.status, required this.userId});
+
+  @override
+  _BookingListScreenState createState() => _BookingListScreenState();
+}
+
+class _BookingListScreenState extends State<BookingListScreen> {
+  late Future<List<Booking>> _bookings;
+
+  @override
+  void initState() {
+    super.initState();
+    _bookings = _fetchBookings();
+  }
+
+  Future<List<Booking>> _fetchBookings() async {
+    try {
+      final response = await http.get(
+        Uri.parse('https://8d15a120-59ff-4395-9b44-876920f1d072-00-9xsue14fhvuy.worf.replit.dev/bookings-user?userId=${widget.userId}&status=${widget.status}'),
+      );
+      if (response.statusCode == 200) {
+        final List<dynamic> bookingsJson = json.decode(response.body);
+        return bookingsJson.map((json) => Booking.fromJson(json)).toList();
+      } else {
+        throw Exception('Failed to load bookings: HTTP ${response.statusCode}');
+      }
+    } catch (e) {
+      print('Error fetching bookings: $e');
+      throw Exception('Error fetching bookings: $e');
+    }
+  }
+
+  Future<void> _reportBooking(String bookingId, String reportReason) async {
+    try {
+      final response = await http.post(
+        Uri.parse('https://8d15a120-59ff-4395-9b44-876920f1d072-00-9xsue14fhvuy.worf.replit.dev/reports'),
+        headers: {'Content-Type': 'application/json'},
+        body: json.encode({'bookingId': bookingId, 'reason': reportReason}),
+      );
+      if (response.statusCode == 201) {
+        _showToast("Report submitted successfully!");
+        _refreshBookings();
+      } else {
+        throw Exception('Failed to report booking: ${response.body}');
+      }
+    } catch (e) {
+      print('Error reporting booking: $e');
+      _showToast("Failed to submit report.");
+    }
+  }
+
+  Future<void> _markAsCompleted(String bookingId) async {
+    try {
+      final response = await http.patch(
+        Uri.parse('https://8d15a120-59ff-4395-9b44-876920f1d072-00-9xsue14fhvuy.worf.replit.dev/bookings/$bookingId/complete'),
+        headers: {'Content-Type': 'application/json'},
+      );
+      if (response.statusCode == 200) {
+        _showToast("Booking marked as completed!");
+        _refreshBookings();
+      } else {
+        throw Exception('Failed to mark booking as completed: ${response.body}');
+      }
+    } catch (e) {
+      print('Error marking booking as completed: $e');
+      _showToast("Failed to mark booking as completed.");
+    }
+  }
+
+  Future<void> _submitFeedback(String bookingId, int rating, String feedback) async {
+    try {
+      final response = await http.post(
+        Uri.parse('https://8d15a120-59ff-4395-9b44-876920f1d072-00-9xsue14fhvuy.worf.replit.dev/feedback'),
+        headers: {'Content-Type': 'application/json'},
+        body: json.encode({
+          'bookingId': bookingId,
+          'rating': rating,
+          'feedbackText': feedback,
+        }),
+      );
+      if (response.statusCode == 201) {
+        _showToast("Feedback submitted successfully!");
+        _refreshBookings();
+      } else {
+        throw Exception('Failed to submit feedback: ${response.body}');
+      }
+    } catch (e) {
+      print('Error submitting feedback: $e');
+      _showToast("Failed to submit feedback.");
+    }
+  }
+
+  void _refreshBookings() {
+    setState(() {
+      _bookings = _fetchBookings();
+    });
+  }
+
+  void _showToast(String message) {
+    Fluttertoast.showToast(
+      msg: message,
+      toastLength: Toast.LENGTH_SHORT,
+      gravity: ToastGravity.BOTTOM,
+    );
+  }
+
+  void _showBookingDetails(BuildContext context, Booking booking) {
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: Text('Booking Details'),
+          content: SingleChildScrollView(
+            child: Column(
+              children: [
+                Text('Service: ${booking.serviceDetails}'),
+                Text('Date of Service: ${booking.dateOfService}'),
+                Text('Handyman Name: ${booking.bookerFirstName} ${booking.bookerLastName}'),
+                ...booking.images.map((image) => Image.memory(base64Decode(image))),
+              ],
+            ),
+          ),
+          actions: _getDialogActions(context, booking),
+        );
+      },
+    );
+  }
+
+  List<Widget> _getDialogActions(BuildContext context, Booking booking) {
+    if (widget.status == 'accepted') {
+      return [
+        TextButton(
+          onPressed: () => _showReportDialog(context, booking.id),
+          child: Text('Report Booking'),
+        ),
+        TextButton(
+          onPressed: () {
+            _markAsCompleted(booking.id);
+            Navigator.pop(context);
+          },
+          child: Text('Mark as Completed'),
+        ),
+      ];
+    } else {
+      return [
+        TextButton(
+          onPressed: () => _showFeedbackDialog(context, booking.id),
+          child: Text('Leave Feedback'),
+        ),
+        TextButton(
+          onPressed: () => Navigator.pop(context),
+          child: Text('Close'),
+        ),
+      ];
+    }
+  }
+
+  void _showReportDialog(BuildContext context, String bookingId) {
+    String reportReason = '';
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: Text('Report Booking'),
+          content: TextField(
+            onChanged: (value) => reportReason = value,
+            decoration: InputDecoration(hintText: 'Enter report reason'),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () {
+                _reportBooking(bookingId, reportReason);
+                Navigator.pop(context);
+              },
+              child: Text('Submit Report'),
+            ),
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: Text('Cancel'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  void _showFeedbackDialog(BuildContext context, String bookingId) {
+    int rating = 3;
+    String feedback = '';
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: Text('Leave Feedback'),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text('Rate your experience:'),
+              DropdownButton<int>(
+                value: rating,
+                onChanged: (newRating) {
+                  setState(() {
+                    rating = newRating!;
+                  });
+                },
+                items: List.generate(5, (index) {
+                  return DropdownMenuItem(
+                    value: index + 1,
+                    child: Text('${index + 1} Star${index == 0 ? '' : 's'}'),
+                  );
+                }),
+              ),
+              TextField(
+                onChanged: (value) => feedback = value,
+                decoration: InputDecoration(hintText: 'Enter feedback'),
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () {
+                _submitFeedback(bookingId, rating, feedback);
+                Navigator.pop(context);
+              },
+              child: Text('Submit Feedback'),
+            ),
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: Text('Cancel'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: Text(widget.status == 'accepted' ? 'Pending Bookings' : 'Completed Bookings'),
+      ),
+      body: FutureBuilder<List<Booking>>(
+        future: _bookings,
+        builder: (context, snapshot) {
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return Center(child: CircularProgressIndicator());
+          } else if (snapshot.hasError) {
+            return Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Text(
+                    'Error loading bookings',
+                    style: TextStyle(color: Colors.red, fontSize: 18),
+                  ),
+                  SizedBox(height: 10),
+                  Text(
+                    'Details: ${snapshot.error}',
+                    style: TextStyle(color: Colors.black54),
+                    textAlign: TextAlign.center,
+                  ),
+                ],
+              ),
+            );
+          } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
+            return Center(child: Text('No bookings found'));
+          } else {
+            final bookings = snapshot.data!;
+            return ListView.builder(
+              itemCount: bookings.length,
+              itemBuilder: (context, index) {
+                final booking = bookings[index];
+                return ListTile(
+                  title: Text('Booking ID: ${booking.id}'),
+                  subtitle: Text('Service: ${booking.serviceDetails}'),
+                  trailing: Text(widget.status == 'accepted' ? 'Pending' : 'Completed'),
+                  onTap: () => _showBookingDetails(context, booking),
+                );
+              },
+            );
+          }
+        },
+      ),
+    );
+  }
 }

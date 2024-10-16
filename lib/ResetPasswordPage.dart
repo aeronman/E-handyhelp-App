@@ -18,7 +18,7 @@ class _ResetPasswordPageState extends State<ResetPasswordPage> {
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
 
   Future<void> _resetPassword() async {
-    final url = Uri.parse('http://192.168.0.113:3000/reset-password/${widget.token}'); // Replace with your backend URL
+    final url = Uri.parse('https://8d15a120-59ff-4395-9b44-876920f1d072-00-9xsue14fhvuy.worf.replit.dev/reset-password/${widget.token}'); // Replace with your backend URL
 
     try {
       final response = await http.post(

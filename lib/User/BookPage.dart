@@ -25,10 +25,7 @@ class BookingForm extends StatefulWidget {
 
 class _BookingFormState extends State<BookingForm> {
   final _formKey = GlobalKey<FormState>();
-  final _nameController = TextEditingController();
-  final _phoneController = TextEditingController();
-  final _addressController = TextEditingController();
-  final _cityController = TextEditingController();
+  
   final _serviceDetailsController = TextEditingController();
 
   DateTime _selectedDate = DateTime.now();
@@ -78,7 +75,7 @@ class _BookingFormState extends State<BookingForm> {
 
   Future<void> _sendBookingRequest() async {
     if (_formKey.currentState!.validate()) {
-      final url = 'http://127.0.0.1:3000/api/bookings';
+      final url = 'https://8d15a120-59ff-4395-9b44-876920f1d072-00-9xsue14fhvuy.worf.replit.dev/api/bookings';
       final response = await http.post(
         Uri.parse(url),
         headers: {"Content-Type": "application/json"},
@@ -87,10 +84,6 @@ class _BookingFormState extends State<BookingForm> {
           'handymanId': widget.handymanId,
           'handymanName': widget.handymanName,
           'handymanType': widget.handymanType,
-          'name': _nameController.text,
-          'phone': _phoneController.text,
-          'address': _addressController.text,
-          'city': _cityController.text,
           'serviceDetails': _serviceDetailsController.text,
           'dateOfService': _selectedDate.toIso8601String(),
           'urgentRequest': _urgentRequest,
@@ -103,10 +96,6 @@ class _BookingFormState extends State<BookingForm> {
                         context,
                         MaterialPageRoute(
                           builder: (context) => ConfirmationPage(
-                            name: _nameController.text,
-                            phone: _phoneController.text,
-                            address: _addressController.text,
-                            city: _cityController.text,
                             date: _selectedDate,
                             handyman: widget.handymanName,
                             service: '',
@@ -143,45 +132,7 @@ class _BookingFormState extends State<BookingForm> {
             key: _formKey,
             child: Column(
               children: <Widget>[
-                TextFormField(
-                  controller: _nameController,
-                  decoration: InputDecoration(
-                    labelText: 'Name',
-                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(10.0)),
-                    contentPadding: EdgeInsets.symmetric(horizontal: 10.0),
-                  ),
-                  validator: (value) => value!.isEmpty ? 'Please enter your name' : null,
-                ),
-                SizedBox(height: 16),
-                TextFormField(
-                  controller: _phoneController,
-                  decoration: InputDecoration(
-                    labelText: 'Phone Number',
-                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(10.0)),
-                    contentPadding: EdgeInsets.symmetric(horizontal: 10.0),
-                  ),
-                  validator: (value) => value!.isEmpty ? 'Please enter your phone number' : null,
-                ),
-                SizedBox(height: 16),
-                TextFormField(
-                  controller: _addressController,
-                  decoration: InputDecoration(
-                    labelText: 'Address',
-                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(10.0)),
-                    contentPadding: EdgeInsets.symmetric(horizontal: 10.0),
-                  ),
-                  validator: (value) => value!.isEmpty ? 'Please enter your address' : null,
-                ),
-                SizedBox(height: 16),
-                TextFormField(
-                  controller: _cityController,
-                  decoration: InputDecoration(
-                    labelText: 'City',
-                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(10.0)),
-                    contentPadding: EdgeInsets.symmetric(horizontal: 10.0),
-                  ),
-                  validator: (value) => value!.isEmpty ? 'Please enter your city' : null,
-                ),
+                
                 SizedBox(height: 16),
                 TextFormField(
                   controller: _serviceDetailsController,

@@ -8,10 +8,6 @@ class ConfirmationPage extends StatelessWidget {
   final String clientName;
   final String handyman;
   final String reservationDateTime;
-  final String name;
-  final String phone;
-  final String address;
-  final String city;
   final DateTime date;
   final List<String> handymanType; // Updated to List<String>
   final bool urgentRequest;
@@ -23,10 +19,6 @@ class ConfirmationPage extends StatelessWidget {
     required this.clientName,
     required this.handyman,
     required this.reservationDateTime,
-    required this.name,
-    required this.phone,
-    required this.address,
-    required this.city,
     required this.date,
     required this.handymanType,
     required this.urgentRequest,
@@ -78,21 +70,6 @@ class ConfirmationPage extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Row(
-                    children: [
-                      _buildInfoColumn('Resident Name:', name),
-                      SizedBox(width: 16),
-                      _buildInfoColumn('Phone:', phone),
-                    ],
-                  ),
-                  SizedBox(height: 16),
-                  Row(
-                    children: [
-                      _buildInfoColumn('Address:', address),
-                      SizedBox(width: 16),
-                      _buildInfoColumn('City:', city),
-                    ],
-                  ),
                   SizedBox(height: 16),
                   Row(
                     children: [

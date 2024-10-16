@@ -31,7 +31,7 @@ class _NotificationPageState extends State<NotificationPage> {
   }
 
   Future<void> _fetchNotifications() async {
-    final response = await http.get(Uri.parse('http://127.0.0.1:3000/api/notifications/$_id'));
+    final response = await http.get(Uri.parse('https://8d15a120-59ff-4395-9b44-876920f1d072-00-9xsue14fhvuy.worf.replit.dev/api/notifications/$_id'));
 
     if (response.statusCode == 200) {
       List<dynamic> data = json.decode(response.body);

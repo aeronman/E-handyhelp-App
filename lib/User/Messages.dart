@@ -28,7 +28,7 @@ class _MessagesScreenState extends State<MessagesScreen>{
   }
   Future<void> fetchMessages() async {
     print('id:'+_id);
-  final response = await http.get(Uri.parse('http://127.0.0.1:3000/api/user-messages?userId=$_id'));
+  final response = await http.get(Uri.parse('https://8d15a120-59ff-4395-9b44-876920f1d072-00-9xsue14fhvuy.worf.replit.dev/api/user-messages?userId=$_id'));
 
   if (response.statusCode == 200) {
     setState(() {
@@ -46,6 +46,59 @@ class _MessagesScreenState extends State<MessagesScreen>{
       MaterialPageRoute(
         builder: (context) => ChatScreen(bookingId: bookingId, handymanId: handymanId,userId: userId,),
       ),
+    );
+  }
+  void reportMessage(String bookingId) {
+    showDialog(
+      context: context,
+      builder: (context) {
+        String reportReason = '';
+        return AlertDialog(
+          title: Text('Report Client'),
+          content: TextField(
+            onChanged: (value) {
+              reportReason = value;
+            },
+            decoration: InputDecoration(hintText: 'Enter report reason'),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () async {
+                if (reportReason.isNotEmpty) {
+                  // Send report to the backend
+                  final response = await http.post(
+                    Uri.parse('https://8d15a120-59ff-4395-9b44-876920f1d072-00-9xsue14fhvuy.worf.replit.dev/reports'),
+                    headers: {'Content-Type': 'application/json'},
+                    body: json.encode({
+                      'bookingId': bookingId,
+                      'reason': reportReason,
+                    }),
+                  );
+
+                  if (response.statusCode == 201) {
+                    Navigator.pop(context);
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(content: Text('Report submitted successfully!')),
+                    );
+                  } else {
+                    Navigator.pop(context);
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(content: Text('Failed to submit report.')),
+                    );
+                  }
+                }
+              },
+              child: Text('Submit'),
+            ),
+            TextButton(
+              onPressed: () {
+                Navigator.pop(context);
+              },
+              child: Text('Cancel'),
+            ),
+          ],
+        );
+      },
     );
   }
 
@@ -89,6 +142,7 @@ class _MessagesScreenState extends State<MessagesScreen>{
                     onTap: () {
                       navigateToChat(message['booking_id'],message['handyman_id'],message['user_id']);
                     },
+                    onReport: () => reportMessage(message['booking_id']), // Pass message ID to report
                   );
                 },
               ),
@@ -104,10 +158,16 @@ class MessageCard extends StatelessWidget {
   final String name;
   final String message;
   final VoidCallback onTap;
+  final VoidCallback onReport;
 
-  MessageCard({required this.name, required this.message, required this.onTap});
+   MessageCard({
+    required this.name,
+    required this.message,
+    required this.onTap,
+    required this.onReport,
+  });
 
-  @override
+   @override
   Widget build(BuildContext context) {
     return GestureDetector(
       onTap: onTap,
@@ -125,13 +185,23 @@ class MessageCard extends StatelessWidget {
               color: Colors.grey[300],
             ),
           ),
-          title: Text(name),
+          title: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Expanded(child: Text(name)),
+              IconButton(
+                icon: Icon(Icons.report),
+                onPressed: onReport, // Report button action
+              ),
+            ],
+          ),
           subtitle: Text(message),
         ),
       ),
     );
   }
 }
+
 
 class ChatScreen extends StatefulWidget {
   final String bookingId;
@@ -156,7 +226,7 @@ class ChatScreenState extends State<ChatScreen> {
   }
 
   Future<void> fetchConversation() async {
-    final response = await http.get(Uri.parse('http://127.0.0.1:3000/api/user-conversation/${widget.bookingId}'));
+    final response = await http.get(Uri.parse('https://8d15a120-59ff-4395-9b44-876920f1d072-00-9xsue14fhvuy.worf.replit.dev/api/user-conversation/${widget.bookingId}'));
     if (response.statusCode == 200) {
       setState(() {
         _messages = json.decode(response.body);
@@ -179,7 +249,7 @@ class ChatScreenState extends State<ChatScreen> {
       try {
         // Send the message to the backend API
         final response = await http.post(
-          Uri.parse('http://127.0.0.1:3000/api/send-message-user'), // Your API endpoint
+          Uri.parse('https://8d15a120-59ff-4395-9b44-876920f1d072-00-9xsue14fhvuy.worf.replit.dev/api/send-message-user'), // Your API endpoint
           headers: {
             'Content-Type': 'application/json',
           },

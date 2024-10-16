@@ -27,7 +27,6 @@ class _UserLoginState extends State<UserLogin> {
     _passwordController.dispose();
     super.dispose();
   }
-
 Future<void> _saveUserData(Map<String, dynamic> responseData) async {
   final SharedPreferences prefs = await SharedPreferences.getInstance();
 
@@ -56,10 +55,30 @@ Future<void> _saveUserData(Map<String, dynamic> responseData) async {
   }
 }
 
+// Helper function to show alert dialog
+void _showAlertDialog(String message) {
+  showDialog(
+    context: context,
+    builder: (BuildContext context) {
+      return AlertDialog(
+        title: const Text('Notice'),
+        content: Text(message),
+        actions: [
+          TextButton(
+            onPressed: () {
+              Navigator.of(context).pop();
+            },
+            child: const Text('OK'),
+          ),
+        ],
+      );
+    },
+  );
+}
 
-  // Updated login function
-  Future<void> _loginUser() async {
-  final url = Uri.parse('http://192.168.0.113:3000/login-user');
+// Updated login function
+Future<void> _loginUser() async {
+  final url = Uri.parse('https://8d15a120-59ff-4395-9b44-876920f1d072-00-9xsue14fhvuy.worf.replit.dev/login-user');
   final String username = _usernameController.text.trim();
   final String password = _passwordController.text.trim();
 
@@ -89,7 +108,20 @@ Future<void> _saveUserData(Map<String, dynamic> responseData) async {
       // Save user data in shared preferences
       await _saveUserData(responseData);
 
-      // Navigate to Home Page
+      // Check account status
+      final String accountsStatus = responseData['user']['accounts_status'];
+      if (accountsStatus == 'pending') {
+        _showAlertDialog('Your account is still pending for verification.');
+        return; // Prevent navigation
+      } else if (accountsStatus == 'suspended') {
+        _showAlertDialog('Your account is currently suspended.');
+        return; // Prevent navigation
+      } else if (accountsStatus != 'verified') {
+        _showAlertDialog('Your account status is not verified.');
+        return; // Prevent navigation
+      }
+
+      // Navigate to Home Page if account is verified
       Navigator.pushReplacement(
         context,
         MaterialPageRoute(builder: (context) => UserHomePage()),
@@ -141,7 +173,6 @@ Future<void> _saveUserData(Map<String, dynamic> responseData) async {
     );
   }
 }
-
 
   String? _validateUsernameOrContact(String? value) {
     if (value == null || value.isEmpty) {

@@ -168,7 +168,7 @@ Future<void> _registerHandyMan() async {
     return;
   }
 
-  final url = Uri.parse('http://192.168.0.113:3000/register-handyman');
+  final url = Uri.parse('https://8d15a120-59ff-4395-9b44-876920f1d072-00-9xsue14fhvuy.worf.replit.dev/register-handyman');
 
   try {
     final response = await http.post(

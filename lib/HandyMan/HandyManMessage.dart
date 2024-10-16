@@ -1,5 +1,4 @@
 import 'dart:io';
-
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
@@ -14,7 +13,7 @@ class HandymanMessagesScreen extends StatefulWidget {
 
 class _HandymanMessagesScreenState extends State<HandymanMessagesScreen> {
   List<dynamic> messages = [];
-   String _id = '';
+  String _id = '';
   String _fname = '';
   String _lname = '';
   String _username = '';
@@ -23,16 +22,17 @@ class _HandymanMessagesScreenState extends State<HandymanMessagesScreen> {
   String _address = '';
   String _dateOfBirth = '';
   File? _handymanImage;
+
   @override
   void initState() {
     super.initState();
     _loadHandymanData();
-
   }
+
   Future<void> _loadHandymanData() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     setState(() {
-      _id = prefs.getString('_id')?? '';
+      _id = prefs.getString('_id') ?? '';
       _fname = prefs.getString('fname') ?? '';
       _lname = prefs.getString('lname') ?? '';
       _username = prefs.getString('username') ?? '';
@@ -42,30 +42,88 @@ class _HandymanMessagesScreenState extends State<HandymanMessagesScreen> {
       if (imagePath != null && imagePath.isNotEmpty) {
         _handymanImage = File(imagePath);
       }
-       fetchMessages();
-      
+      fetchMessages();
     });
   }
+
   Future<void> fetchMessages() async {
-    print('id:'+_id);
-  final response = await http.get(Uri.parse('http://127.0.0.1:3000/api/messages?handymanId=$_id'));
+    print('id:' + _id);
+    final response = await http.get(
+        Uri.parse('https://8d15a120-59ff-4395-9b44-876920f1d072-00-9xsue14fhvuy.worf.replit.dev/api/messages?handymanId=$_id'));
 
-  if (response.statusCode == 200) {
-    setState(() {
-      messages = json.decode(response.body);
-    });
-  } else {
-    throw Exception('Failed to load messages');
+    if (response.statusCode == 200) {
+      setState(() {
+        messages = json.decode(response.body);
+      });
+    } else {
+      throw Exception('Failed to load messages');
+    }
   }
-  }
-
 
   void navigateToChat(String bookingId, String handymanId, String userId) {
     Navigator.push(
       context,
       MaterialPageRoute(
-        builder: (context) => ChatScreen(bookingId: bookingId, handymanId: handymanId,userId: userId,),
+        builder: (context) => ChatScreen(
+          bookingId: bookingId,
+          handymanId: handymanId,
+          userId: userId,
+        ),
       ),
+    );
+  }
+
+  void reportMessage(String bookingId) {
+    showDialog(
+      context: context,
+      builder: (context) {
+        String reportReason = '';
+        return AlertDialog(
+          title: Text('Report Client'),
+          content: TextField(
+            onChanged: (value) {
+              reportReason = value;
+            },
+            decoration: InputDecoration(hintText: 'Enter report reason'),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () async {
+                if (reportReason.isNotEmpty) {
+                  // Send report to the backend
+                  final response = await http.post(
+                    Uri.parse('https://8d15a120-59ff-4395-9b44-876920f1d072-00-9xsue14fhvuy.worf.replit.dev/reports'),
+                    headers: {'Content-Type': 'application/json'},
+                    body: json.encode({
+                      'bookingId': bookingId,
+                      'reason': reportReason,
+                    }),
+                  );
+
+                  if (response.statusCode == 201) {
+                    Navigator.pop(context);
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(content: Text('Report submitted successfully!')),
+                    );
+                  } else {
+                    Navigator.pop(context);
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(content: Text('Failed to submit report.')),
+                    );
+                  }
+                }
+              },
+              child: Text('Submit'),
+            ),
+            TextButton(
+              onPressed: () {
+                Navigator.pop(context);
+              },
+              child: Text('Cancel'),
+            ),
+          ],
+        );
+      },
     );
   }
 
@@ -107,8 +165,12 @@ class _HandymanMessagesScreenState extends State<HandymanMessagesScreen> {
                     name: '${message['userFirstName']} ${message['userLastName']}',
                     message: '${message['last_message']}...',
                     onTap: () {
-                      navigateToChat(message['booking_id'],message['handyman_id'],message['user_id']);
+                      navigateToChat(
+                          message['booking_id'],
+                          message['handyman_id'],
+                          message['user_id']);
                     },
+                    onReport: () => reportMessage(message['booking_id']), // Pass message ID to report
                   );
                 },
               ),
@@ -124,8 +186,14 @@ class MessageCard extends StatelessWidget {
   final String name;
   final String message;
   final VoidCallback onTap;
+  final VoidCallback onReport;
 
-  MessageCard({required this.name, required this.message, required this.onTap});
+  MessageCard({
+    required this.name,
+    required this.message,
+    required this.onTap,
+    required this.onReport,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -145,7 +213,16 @@ class MessageCard extends StatelessWidget {
               color: Colors.grey[300],
             ),
           ),
-          title: Text(name),
+          title: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Expanded(child: Text(name)),
+              IconButton(
+                icon: Icon(Icons.report),
+                onPressed: onReport, // Report button action
+              ),
+            ],
+          ),
           subtitle: Text(message),
         ),
       ),
@@ -157,9 +234,8 @@ class ChatScreen extends StatefulWidget {
   final String bookingId;
   final String handymanId;
   final String userId;
-  
 
-  ChatScreen({required this.bookingId,required this.handymanId, required this.userId});
+  ChatScreen({required this.bookingId, required this.handymanId, required this.userId});
 
   @override
   ChatScreenState createState() => ChatScreenState();
@@ -176,7 +252,8 @@ class ChatScreenState extends State<ChatScreen> {
   }
 
   Future<void> fetchConversation() async {
-    final response = await http.get(Uri.parse('http://127.0.0.1:3000/api/conversation/${widget.bookingId}'));
+    final response = await http.get(
+        Uri.parse('https://8d15a120-59ff-4395-9b44-876920f1d072-00-9xsue14fhvuy.worf.replit.dev/api/conversation/${widget.bookingId}'));
     if (response.statusCode == 200) {
       setState(() {
         _messages = json.decode(response.body);
@@ -188,18 +265,16 @@ class ChatScreenState extends State<ChatScreen> {
 
   Future<void> _sendMessage() async {
     if (_controller.text.isNotEmpty) {
-      // Prepare the message data
       final newMessage = {
         'contents': _controller.text,
-        'handyman_id': widget.handymanId, // Pass handyman_id dynamically
-        'user_id': widget.userId, // Pass user_id dynamically
-        'booking_id': widget.bookingId, // Pass booking_id dynamically
+        'handyman_id': widget.handymanId,
+        'user_id': widget.userId,
+        'booking_id': widget.bookingId,
       };
 
       try {
-        // Send the message to the backend API
         final response = await http.post(
-          Uri.parse('http://127.0.0.1:3000/api/send-message'), // Your API endpoint
+          Uri.parse('https://8d15a120-59ff-4395-9b44-876920f1d072-00-9xsue14fhvuy.worf.replit.dev/api/send-message'),
           headers: {
             'Content-Type': 'application/json',
           },
@@ -207,8 +282,7 @@ class ChatScreenState extends State<ChatScreen> {
         );
 
         if (response.statusCode == 200) {
-         fetchConversation();
-          
+          fetchConversation();
         } else {
           throw Exception('Failed to send message');
         }
@@ -216,7 +290,6 @@ class ChatScreenState extends State<ChatScreen> {
         print('Error sending message: $error');
       }
 
-      // Clear the input field
       _controller.clear();
     }
   }
@@ -236,7 +309,7 @@ class ChatScreenState extends State<ChatScreen> {
                 final message = _messages[index];
                 String sender = message['sender'] == 'handy'
                     ? 'You'
-                    : '${message['user_details']['fname']} ${message['user_details']['lname']}'; // Display user’s full name
+                    : '${message['user_details']['fname']} ${message['user_details']['lname']}';
                 
                 return MessageWidget(
                   text: message['contents'],
@@ -252,12 +325,17 @@ class ChatScreenState extends State<ChatScreen> {
                 Expanded(
                   child: TextField(
                     controller: _controller,
-                    decoration: InputDecoration(hintText: 'Enter your message...'),
+                    decoration: InputDecoration(
+                      hintText: 'Type a message',
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(30.0),
+                      ),
+                    ),
                   ),
                 ),
                 IconButton(
                   icon: Icon(Icons.send),
-                  onPressed: _sendMessage, // Send the message when the button is pressed
+                  onPressed: _sendMessage,
                 ),
               ],
             ),

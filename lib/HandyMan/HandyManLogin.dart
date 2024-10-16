@@ -5,7 +5,7 @@ import 'dart:convert';
 import 'dart:io';
 import 'HandyManRegister.dart';
 import 'HandyManHomePage.dart';
-import 'package:shared_preferences/shared_preferences.dart'; // Import for shared_preferences
+import 'package:shared_preferences/shared_preferences.dart'; // Import for shared_preference
 
 class HandyManLogin extends StatefulWidget {
   const HandyManLogin({super.key});
@@ -19,6 +19,7 @@ class _HandyManLoginState extends State<HandyManLogin> {
   final TextEditingController _passwordController = TextEditingController();
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
   bool _passwordVisible = false;
+  bool _isLoading = false; // Variable to manage loading state
 
   @override
   void dispose() {
@@ -28,84 +29,71 @@ class _HandyManLoginState extends State<HandyManLogin> {
   }
 
   Future<void> _loginHandyman() async {
-    final url = Uri.parse('http://192.168.0.113:3000/login-handyman');
-    final String username = _usernameController.text.trim();
-    final String password = _passwordController.text.trim();
+  final url = Uri.parse('https://8d15a120-59ff-4395-9b44-876920f1d072-00-9xsue14fhvuy.worf.replit.dev/login-handyman');
+  final String username = _usernameController.text.trim();
+  final String password = _passwordController.text.trim();
 
-    try {
-      print("Sending login request for username: $username"); // Log request initiation
+  setState(() {
+    _isLoading = true; // Start loading
+  });
 
-      final response = await http.post(
-        url,
-        headers: {'Content-Type': 'application/json'},
-        body: jsonEncode({
-          'username': username,
-          'password': password,
-        }),
-      );
+  try {
+    final response = await http.post(
+      url,
+      headers: {'Content-Type': 'application/json'},
+      body: jsonEncode({
+        'username': username,
+        'password': password,
+      }),
+    );
 
-      print("Received response with status code: ${response.statusCode}"); // Log response status code
+    final data = jsonDecode(response.body);
 
-      // Define 'data' here to avoid undefined name error
-      final data = jsonDecode(response.body);
+    if (response.statusCode == 200) {
+      final String token = data['token'];
+      final handyman = data['handyman'];
 
-      if (response.statusCode == 200) {
-        // If the login is successful, extract token and handyman data
-        final String token = data['token'];
-        final handyman = data['handyman'];
-
-        print("Login successful for username: $username"); // Log success
-
-        // Save handyman data in shared preferences
-        SharedPreferences prefs = await SharedPreferences.getInstance();
-        await prefs.setString('token', token);
-        await prefs.setString('_id', handyman['id']);
-        await prefs.setString('fname', handyman['fname']);
-        await prefs.setString('lname', handyman['lname']);
-        await prefs.setString('username', handyman['username']);
-        await prefs.setString('dateOfBirth', handyman['dateOfBirth']);
-        await prefs.setString('contact', handyman['contact']);
-        await prefs.setString('address', handyman['address']);
-        await prefs.setStringList('specialization', List<String>.from(handyman['specialization']));
-        await prefs.setStringList('idImages', List<String>.from(handyman['idImages']));
-        await prefs.setStringList('certificatesImages', List<String>.from(handyman['certificatesImages']));
-        await prefs.setBool('dataPrivacyConsent', handyman['dataPrivacyConsent']);
-        await prefs.setString('accounts_status', handyman['accounts_status']);
-
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(builder: (context) => HandyManHomePage()),
-        );
-      } else {
-        // Handle error if the login fails
-        print("Login failed: ${data['message']}"); // Log failure
-        showDialog(
-          context: context,
-          builder: (BuildContext context) {
-            return AlertDialog(
-              title: const Text('Error'),
-              content: Text(data['message'] ?? 'Invalid credentials. Please try again.'),
-              actions: [
-                TextButton(
-                  onPressed: () {
-                    Navigator.of(context).pop();
-                  },
-                  child: const Text('OK'),
-                ),
-              ],
-            );
-          },
-        );
+      // Check account status
+      final String accountsStatus = handyman['accounts_status'];
+      if (accountsStatus == 'pending') {
+        _showAlertDialog('Your account is still pending for verification.');
+        return; // Exit the function, preventing login
+      } else if (accountsStatus == 'suspended') {
+        _showAlertDialog('Your account is currently suspended.');
+        return; // Exit the function, preventing login
+      } else if (accountsStatus != 'verified') {
+        _showAlertDialog('Your account status is not verified.');
+        return; // Handle other unexpected statuses if needed
       }
-    } catch (error) {
-      print("An error occurred during login: $error"); // Log general errors
-      // Handle general errors
+
+      // Proceed to save user data in shared preferences
+      SharedPreferences prefs = await SharedPreferences.getInstance();
+      await prefs.setString('token', token);
+      await prefs.setString('_id', handyman['id']);
+      await prefs.setString('fname', handyman['fname']);
+      await prefs.setString('lname', handyman['lname']);
+      await prefs.setString('username', handyman['username']);
+      await prefs.setString('dateOfBirth', handyman['dateOfBirth']);
+      await prefs.setString('contact', handyman['contact']);
+      await prefs.setString('address', handyman['address']);
+      await prefs.setStringList('specialization', List<String>.from(handyman['specialization']));
+      await prefs.setStringList('idImages', List<String>.from(handyman['idImages']));
+      await prefs.setStringList('certificatesImages', List<String>.from(handyman['certificatesImages']));
+      await prefs.setBool('dataPrivacyConsent', handyman['dataPrivacyConsent']);
+      await prefs.setString('accounts_status', accountsStatus);
+
+      // Navigate to the home page
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (context) => HandyManHomePage()),
+      );
+    } else {
       showDialog(
         context: context,
         builder: (BuildContext context) {
           return AlertDialog(
             title: const Text('Error'),
-            content: const Text('An error occurred. Please try again later.'),
+            content: Text(data['message'] ?? 'Invalid credentials. Please try again.'),
             actions: [
               TextButton(
                 onPressed: () {
@@ -118,7 +106,51 @@ class _HandyManLoginState extends State<HandyManLogin> {
         },
       );
     }
+  } catch (error) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text('Error'),
+          content: const Text('An error occurred. Please try again later.'),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+              child: const Text('OK'),
+            ),
+          ],
+        );
+      },
+    );
+  } finally {
+    setState(() {
+      _isLoading = false; // Stop loading
+    });
   }
+}
+
+// Helper function to show alert dialog
+void _showAlertDialog(String message) {
+  showDialog(
+    context: context,
+    builder: (BuildContext context) {
+      return AlertDialog(
+        title: const Text('Notice'),
+        content: Text(message),
+        actions: [
+          TextButton(
+            onPressed: () {
+              Navigator.of(context).pop();
+            },
+            child: const Text('OK'),
+          ),
+        ],
+      );
+    },
+  );
+}
 
   String? _validateUsernameOrContact(String? value) {
     if (value == null || value.isEmpty) {
@@ -263,28 +295,30 @@ class _HandyManLoginState extends State<HandyManLogin> {
                           ),
                         ),
                         SizedBox(height: 40),
-                        MaterialButton(
-                          onPressed: () {
-                            if (_formKey.currentState!.validate()) {
-                              _formKey.currentState!.save();
-                              _loginHandyman();
-                            }
-                          },
-                          height: 50,
-                          minWidth: double.infinity,
-                          color: Colors.white,
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(10),
-                          ),
-                          child: Text(
-                            "Login",
-                            style: TextStyle(
-                              color: Color.fromARGB(255, 7, 49, 112),
-                              fontSize: 18,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                        ),
+                        _isLoading // Check loading state
+                            ? CircularProgressIndicator() // Show loader
+                            : MaterialButton(
+                                onPressed: () {
+                                  if (_formKey.currentState!.validate()) {
+                                    _formKey.currentState!.save();
+                                    _loginHandyman();
+                                  }
+                                },
+                                height: 50,
+                                minWidth: double.infinity,
+                                color: Colors.white,
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(10),
+                                ),
+                                child: Text(
+                                  "Login",
+                                  style: TextStyle(
+                                    color: Color.fromARGB(255, 7, 49, 112),
+                                    fontSize: 18,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                              ),
                         SizedBox(height: 20),
                         Row(
                           mainAxisAlignment: MainAxisAlignment.center,
@@ -306,7 +340,6 @@ class _HandyManLoginState extends State<HandyManLogin> {
                                 "Register Now",
                                 style: TextStyle(
                                   color: Colors.white,
-                                  fontWeight: FontWeight.bold,
                                 ),
                               ),
                             ),
