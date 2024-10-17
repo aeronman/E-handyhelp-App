@@ -72,6 +72,7 @@ class _MessagesScreenState extends State<MessagesScreen>{
                     body: json.encode({
                       'bookingId': bookingId,
                       'reason': reportReason,
+                      'reported_by':'user',
                     }),
                   );
 
@@ -137,7 +138,7 @@ class _MessagesScreenState extends State<MessagesScreen>{
                 itemBuilder: (context, index) {
                   final message = messages[index];
                   return MessageCard(
-                    name: '${message['userFirstName']} ${message['userManLastName']}',
+                    name: '${message['userFirstName']} ${message['userLastName']}',
                     message: '${message['last_message']}...',
                     onTap: () {
                       navigateToChat(message['booking_id'],message['handyman_id'],message['user_id']);

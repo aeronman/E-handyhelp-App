@@ -13,6 +13,7 @@ import 'package:image_picker/image_picker.dart';
 import 'dart:convert'; 
 import 'package:http/http.dart' as http; 
 import 'package:fluttertoast/fluttertoast.dart';
+import 'package:E_HandyHelp/User/HandymanDetails.dart';
 
 class UserHomePage extends StatelessWidget {
   const UserHomePage({super.key});
@@ -354,39 +355,44 @@ class _DashboardState extends State<Dashboard> {
                         ),
                       ),
                       SizedBox(height: 10),
-                      ListView.builder(
-                        itemCount: filteredProfiles.length,
-                        shrinkWrap: true,
-                        physics: NeverScrollableScrollPhysics(), // Prevent scrolling
-                        itemBuilder: (context, index) {
-                          return Card(
-                            margin: EdgeInsets.symmetric(vertical: 8.0, horizontal: 16.0),
-                            child: ListTile(
-                              contentPadding: EdgeInsets.all(16.0),
-                              leading: CircleAvatar(
-                                backgroundImage: filteredProfiles[index]['imageUrl'] != null
-                                    ? NetworkImage(filteredProfiles[index]['imageUrl'])
-                                    : AssetImage('https://via.placeholder.com/400x200?text=Profile') as ImageProvider<Object>,
-                              ),
-                              title: Text(filteredProfiles[index]['name']),
-                              subtitle: Text('${filteredProfiles[index]['address']}\n${filteredProfiles[index]['handymanType'].join(', ')}'),
-                              isThreeLine: true,
-                              onTap: () {
-                                print('userid :'+_id);
-                                print(filteredProfiles[index]['_id']);
-                                // Navigate to booking page or details
-                                Navigator.push(
-                                  context,
-                                  MaterialPageRoute(builder: (context) => BookingForm(
-                                    userId: _id ?? '',handymanId:filteredProfiles[index]['_id'],handymanName:filteredProfiles[index]['name'], handymanType: filteredProfiles[index]['handymanType'],
-                                  )), 
-                                );
-                              },
+                     ListView.builder(
+                      itemCount: filteredProfiles.length,
+                      shrinkWrap: true,
+                      physics: NeverScrollableScrollPhysics(),
+                      itemBuilder: (context, index) {
+                        return Card(
+                          margin: EdgeInsets.symmetric(vertical: 8.0, horizontal: 16.0),
+                          child: ListTile(
+                            contentPadding: EdgeInsets.all(16.0),
+                            leading: CircleAvatar(
+                              backgroundImage: filteredProfiles[index]['imageUrl'] != null
+                                  ? NetworkImage(filteredProfiles[index]['imageUrl'])
+                                  : AssetImage('https://via.placeholder.com/400x200?text=Profile') as ImageProvider<Object>,
                             ),
-                          );
-                        },
-                      ),
-                    ],
+                            title: Text(filteredProfiles[index]['name']),
+                            subtitle: Text('${filteredProfiles[index]['address']}\n${filteredProfiles[index]['handymanType'].join(', ')}'),
+                            isThreeLine: true,
+                            onTap: () {
+                        
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (context) => HandymanDetailsPage(
+                                    userId: _id ?? '',
+                                    handymanId: filteredProfiles[index]['_id'],
+                                    handymanName: filteredProfiles[index]['name'],
+                                    handymanType: filteredProfiles[index]['handymanType'].join(', '),
+                                    contact: filteredProfiles[index]['contact'],
+                                    address: filteredProfiles[index]['address'],
+                                    imageUrl: filteredProfiles[index]['imageUrl'],
+                                  ),
+                                ),
+                              );
+                            },
+                          ),
+                        );
+                      },
+                    ),  ],
                   ),
                 ),
               ],
@@ -472,7 +478,7 @@ class _BookingListScreenState extends State<BookingListScreen> {
       final response = await http.post(
         Uri.parse('https://8d15a120-59ff-4395-9b44-876920f1d072-00-9xsue14fhvuy.worf.replit.dev/reports'),
         headers: {'Content-Type': 'application/json'},
-        body: json.encode({'bookingId': bookingId, 'reason': reportReason}),
+        body: json.encode({'bookingId': bookingId, 'reason': reportReason , 'reported_by':'user'}),
       );
       if (response.statusCode == 201) {
         _showToast("Report submitted successfully!");
@@ -513,6 +519,7 @@ class _BookingListScreenState extends State<BookingListScreen> {
           'bookingId': bookingId,
           'rating': rating,
           'feedbackText': feedback,
+          'sentBy': 'user',
         }),
       );
       if (response.statusCode == 201) {
@@ -722,3 +729,4 @@ class _BookingListScreenState extends State<BookingListScreen> {
     );
   }
 }
+

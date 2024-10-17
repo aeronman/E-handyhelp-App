@@ -787,7 +787,7 @@ class _BookingListScreenState extends State<BookingListScreen> {
       final response = await http.post(
         Uri.parse('https://8d15a120-59ff-4395-9b44-876920f1d072-00-9xsue14fhvuy.worf.replit.dev/reports'),
         headers: {'Content-Type': 'application/json'},
-        body: json.encode({'bookingId': bookingId, 'reason': reportReason}),
+        body: json.encode({'bookingId': bookingId, 'reason': reportReason ,'reported_by':'handyman'}),
       );
       if (response.statusCode == 201) {
         _showToast("Report submitted successfully!");
@@ -828,6 +828,7 @@ class _BookingListScreenState extends State<BookingListScreen> {
           'bookingId': bookingId,
           'rating': rating,
           'feedbackText': feedback,
+          'sentBy':'handyman'
         }),
       );
       if (response.statusCode == 201) {

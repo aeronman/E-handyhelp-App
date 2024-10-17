@@ -92,21 +92,21 @@ class _BookingFormState extends State<BookingForm> {
       );
 
       if (response.statusCode == 200) {
-       Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => ConfirmationPage(
-                            date: _selectedDate,
-                            handyman: widget.handymanName,
-                            service: '',
-                            clientName: '',
-                            reservationDateTime: '', 
-                            handymanType: widget.handymanType,
-                            urgentRequest: _urgentRequest,
-                            base64Images: _imagesBase64,
-                          ),
-                        ),
-                      );
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => ConfirmationPage(
+              date: _selectedDate,
+              handyman: widget.handymanName,
+              service: '',
+              clientName: '',
+              reservationDateTime: '', 
+              handymanType: widget.handymanType,
+              urgentRequest: _urgentRequest,
+              base64Images: _imagesBase64,
+            ),
+          ),
+        );
       } else {
         print('Failed to send booking request');
       }
@@ -115,79 +115,85 @@ class _BookingFormState extends State<BookingForm> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: Text('Booking Information', style: TextStyle(color: Colors.white)),
-        backgroundColor: const Color.fromARGB(255, 7, 49, 112),
-        iconTheme: IconThemeData(color: Colors.white),
-        leading: IconButton(
-          icon: Icon(Icons.arrow_back),
-          onPressed: () => Navigator.pop(context),
+    return WillPopScope(
+      onWillPop: () async {
+        // Return true if you want to allow back navigation, false otherwise
+        Navigator.pop(context);  // This will take you to the previous panel instead of the first page
+        return false; // Prevent default back navigation behavior
+      },
+      child: Scaffold(
+        appBar: AppBar(
+          title: Text('Booking Information', style: TextStyle(color: Colors.white)),
+          backgroundColor: const Color.fromARGB(255, 7, 49, 112),
+          iconTheme: IconThemeData(color: Colors.white),
+          leading: IconButton(
+            icon: Icon(Icons.arrow_back),
+            onPressed: () => Navigator.pop(context),
+          ),
         ),
-      ),
-      body: SingleChildScrollView(
-        child: Padding(
-          padding: EdgeInsets.all(16.0),
-          child: Form(
-            key: _formKey,
-            child: Column(
-              children: <Widget>[
-                
-                SizedBox(height: 16),
-                TextFormField(
-                  controller: _serviceDetailsController,
-                  decoration: InputDecoration(
-                    labelText: 'Service Details',
-                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(10.0)),
-                    contentPadding: EdgeInsets.symmetric(horizontal: 10.0),
+        body: SingleChildScrollView(
+          child: Padding(
+            padding: EdgeInsets.all(16.0),
+            child: Form(
+              key: _formKey,
+              child: Column(
+                children: <Widget>[
+                  SizedBox(height: 16),
+                  TextFormField(
+                    controller: _serviceDetailsController,
+                    decoration: InputDecoration(
+                      labelText: 'Service Details',
+                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(10.0)),
+                      contentPadding: EdgeInsets.symmetric(horizontal: 10.0),
+                    ),
+                    maxLines: 5,
+                    validator: (value) => value!.isEmpty ? 'Please describe the service needed' : null,
                   ),
-                  maxLines: 5,
-                  validator: (value) => value!.isEmpty ? 'Please describe the service needed' : null,
-                ),
-                SizedBox(height: 16),
-                ListTile(
-                  title: Text(
-                    'Date of Service: ${DateFormat('MM/dd/yyyy - hh:mm a').format(_selectedDate)}',
+                  SizedBox(height: 16),
+                  ListTile(
+                    title: Text(
+                      'Date of Service: ${DateFormat('MM/dd/yyyy - hh:mm a').format(_selectedDate)}',
+                    ),
+                    trailing: Icon(Icons.calendar_today),
+                    onTap: () => _selectDateTime(context),
                   ),
-                  trailing: Icon(Icons.calendar_today),
-                  onTap: () => _selectDateTime(context),
-                ),
-                CheckboxListTile(
-                  title: Text('Urgent Request'),
-                  value: _urgentRequest,
-                  onChanged: (value) {
-                    setState(() {
-                      _urgentRequest = value ?? false;
-                    });
-                  },
-                ),
-                ElevatedButton(
-                  onPressed: _pickImage,
-                  child: Text('Add Image'),
-                ),
-                Wrap(
-                  children: _imagesBase64
-                      .map((image) => Padding(
-                            padding: const EdgeInsets.all(8.0),
-                            child: Image.memory(
-                              base64Decode(image),
-                              height: 100,
-                              width: 100,
-                              fit: BoxFit.cover,
-                            ),
-                          ))
-                      .toList(),
-                ),
-                SizedBox(height: 20),
-                ElevatedButton(
-                  onPressed: _sendBookingRequest,
-                  child: Text('Send Request'),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color.fromARGB(255, 7, 49, 112),
-                    minimumSize: Size(double.infinity, 50),
+                  CheckboxListTile(
+                    title: Text('Urgent Request'),
+                    value: _urgentRequest,
+                    onChanged: (value) {
+                      setState(() {
+                        _urgentRequest = value ?? false;
+                      });
+                    },
                   ),
-                ),
-              ],
+                  ElevatedButton(
+                    onPressed: _pickImage,
+                    child: Text('Add Image'),
+                  ),
+                  Wrap(
+                    children: _imagesBase64
+                        .map((image) => Padding(
+                              padding: const EdgeInsets.all(8.0),
+                              child: Image.memory(
+                                base64Decode(image),
+                                height: 100,
+                                width: 100,
+                                fit: BoxFit.cover,
+                              ),
+                            ))
+                        .toList(),
+                  ),
+                  SizedBox(height: 20),
+                  ElevatedButton(
+                    onPressed: _sendBookingRequest,
+                    child: Text('Send Request'),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: const Color.fromARGB(255, 7, 49, 112),
+                      minimumSize: Size(double.infinity, 50),
+                    ),
+                  ),
+                ],
+              ),
             ),
           ),
         ),

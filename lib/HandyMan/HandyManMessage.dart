@@ -97,6 +97,7 @@ class _HandymanMessagesScreenState extends State<HandymanMessagesScreen> {
                     body: json.encode({
                       'bookingId': bookingId,
                       'reason': reportReason,
+                      'reported_by':'handyman',
                     }),
                   );
 

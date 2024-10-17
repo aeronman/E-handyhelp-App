@@ -4,8 +4,9 @@ import 'new_password.dart';
 
 class OTPPage extends StatefulWidget {
   final String phoneNumber;
+  final String otp;
 
-  OTPPage({required this.phoneNumber});
+  OTPPage({required this.phoneNumber,required this.otp});
 
   @override
   _OTPPageState createState() => _OTPPageState();

@@ -31,7 +31,7 @@ MERGED from [:fluttertoast] C:\Users\Admin\Desktop\E-HandyHelp\build\fluttertoas
 MERGED from [:path_provider_android] C:\Users\Admin\Desktop\E-HandyHelp\build\path_provider_android\intermediates\merged_manifest\debug\AndroidManifest.xml:2:1-9:12
 MERGED from [:shared_preferences_android] C:\Users\Admin\Desktop\E-HandyHelp\build\shared_preferences_android\intermediates\merged_manifest\debug\AndroidManifest.xml:2:1-9:12
 MERGED from [androidx.fragment:fragment:1.7.1] C:\Users\Admin\.gradle\caches\transforms-3\ddb1df9f17a95e0f4732643c3f182f1d\transformed\fragment-1.7.1\AndroidManifest.xml:2:1-7:12
-MERGED from [androidx.activity:activity:1.9.1] C:\Users\Admin\.gradle\caches\transforms-3\dfb77caca37213805db96c368329a80d\transformed\jetified-activity-1.9.1\AndroidManifest.xml:17:1-22:12
+MERGED from [androidx.activity:activity:1.9.2] C:\Users\Admin\.gradle\caches\transforms-3\5a639938bf0fd8dba5eac9e6e24c98d4\transformed\jetified-activity-1.9.2\AndroidManifest.xml:17:1-22:12
 MERGED from [androidx.window:window:1.2.0] C:\Users\Admin\.gradle\caches\transforms-3\4bc39588ebfea97e35da4ec444778f94\transformed\jetified-window-1.2.0\AndroidManifest.xml:17:1-31:12
 MERGED from [androidx.window:window-java:1.2.0] C:\Users\Admin\.gradle\caches\transforms-3\6fa4757a4b0c74af72e995bc0feca9a3\transformed\jetified-window-java-1.2.0\AndroidManifest.xml:17:1-21:12
 MERGED from [androidx.loader:loader:1.0.0] C:\Users\Admin\.gradle\caches\transforms-3\8cfc96ea25bb99ed45101c1fa8eeaaf3\transformed\loader-1.0.0\AndroidManifest.xml:17:1-22:12
@@ -97,8 +97,8 @@ MERGED from [:shared_preferences_android] C:\Users\Admin\Desktop\E-HandyHelp\bui
 MERGED from [:shared_preferences_android] C:\Users\Admin\Desktop\E-HandyHelp\build\shared_preferences_android\intermediates\merged_manifest\debug\AndroidManifest.xml:5:5-7:41
 MERGED from [androidx.fragment:fragment:1.7.1] C:\Users\Admin\.gradle\caches\transforms-3\ddb1df9f17a95e0f4732643c3f182f1d\transformed\fragment-1.7.1\AndroidManifest.xml:5:5-44
 MERGED from [androidx.fragment:fragment:1.7.1] C:\Users\Admin\.gradle\caches\transforms-3\ddb1df9f17a95e0f4732643c3f182f1d\transformed\fragment-1.7.1\AndroidManifest.xml:5:5-44
-MERGED from [androidx.activity:activity:1.9.1] C:\Users\Admin\.gradle\caches\transforms-3\dfb77caca37213805db96c368329a80d\transformed\jetified-activity-1.9.1\AndroidManifest.xml:20:5-44
-MERGED from [androidx.activity:activity:1.9.1] C:\Users\Admin\.gradle\caches\transforms-3\dfb77caca37213805db96c368329a80d\transformed\jetified-activity-1.9.1\AndroidManifest.xml:20:5-44
+MERGED from [androidx.activity:activity:1.9.2] C:\Users\Admin\.gradle\caches\transforms-3\5a639938bf0fd8dba5eac9e6e24c98d4\transformed\jetified-activity-1.9.2\AndroidManifest.xml:20:5-44
+MERGED from [androidx.activity:activity:1.9.2] C:\Users\Admin\.gradle\caches\transforms-3\5a639938bf0fd8dba5eac9e6e24c98d4\transformed\jetified-activity-1.9.2\AndroidManifest.xml:20:5-44
 MERGED from [androidx.window:window:1.2.0] C:\Users\Admin\.gradle\caches\transforms-3\4bc39588ebfea97e35da4ec444778f94\transformed\jetified-window-1.2.0\AndroidManifest.xml:20:5-44
 MERGED from [androidx.window:window:1.2.0] C:\Users\Admin\.gradle\caches\transforms-3\4bc39588ebfea97e35da4ec444778f94\transformed\jetified-window-1.2.0\AndroidManifest.xml:20:5-44
 MERGED from [androidx.window:window-java:1.2.0] C:\Users\Admin\.gradle\caches\transforms-3\6fa4757a4b0c74af72e995bc0feca9a3\transformed\jetified-window-java-1.2.0\AndroidManifest.xml:19:5-44

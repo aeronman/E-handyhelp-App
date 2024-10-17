@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'otp_page.dart';
+import 'dart:convert'; 
+import 'package:http/http.dart' as http; 
 
 class ForgotPasswordPage extends StatefulWidget {
   const ForgotPasswordPage({super.key});
@@ -11,19 +13,42 @@ class ForgotPasswordPage extends StatefulWidget {
 class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
   final _phoneController = TextEditingController();
 
-  void _submitPhoneNumber() {
-    String phoneNumber = _phoneController.text;
-    if (_validatePhoneNumber(phoneNumber)) {
-      // Here, you should send the phone number to your backend to send the OTP
-      // For now, we'll just navigate to the next page
-
-      Navigator.of(context).push(
-        MaterialPageRoute(
-          builder: (context) => OTPPage(phoneNumber: phoneNumber),
-        ),
+  void _submitPhoneNumber() async {
+  String phoneNumber = _phoneController.text;
+  if (_validatePhoneNumber(phoneNumber)) {
+    try {
+      // Call your backend API to send the OTP
+      final response = await http.post(
+        Uri.parse('https://8d15a120-59ff-4395-9b44-876920f1d072-00-9xsue14fhvuy.worf.replit.dev/send-otp'), // Replace with your backend URL
+        headers: {'Content-Type': 'application/json'},
+        body: json.encode({'phoneNumber': phoneNumber}),
       );
+
+      if (response.statusCode == 200) {
+        // OTP sent successfully, extract the OTP from the response
+        final responseData = json.decode(response.body);
+        String otp = responseData['otp']; // Adjust according to your API response
+
+        // Navigate to the OTPPage and pass the OTP
+        Navigator.of(context).push(
+          MaterialPageRoute(
+            builder: (context) => OTPPage(
+              phoneNumber: phoneNumber,
+              otp: otp, // Pass the OTP to the OTPPage
+            ),
+          ),
+        );
+      } else {
+        // Handle errors returned from the server
+        final errorResponse = json.decode(response.body);
+        _showErrorDialog(errorResponse['message']);
+      }
+    } catch (e) {
+      _showErrorDialog('Failed to send OTP. Please try again.');
     }
   }
+}
+
 
   bool _validatePhoneNumber(String phoneNumber) {
     if (phoneNumber.isEmpty) {
